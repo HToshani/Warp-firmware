@@ -178,6 +178,8 @@ volatile WarpI2CDeviceState			deviceAS7263State;
 volatile WarpI2CDeviceState			deviceRV8803C7State;
 #endif
 
+
+
 /*
  *	TODO: move this and possibly others into a global structure
  */
@@ -1299,6 +1301,8 @@ main(void)
 	initAS7263(	0x49	/* i2cAddress */,	&deviceAS7263State	);
 #endif
 
+
+
 #ifdef WARP_BUILD_ENABLE_DEVRV8803C7
   initRV8803C7(0x32 /* i2cAddress */, &deviceRV8803C7State);
   enableI2Cpins(menuI2cPullupValue);
@@ -1584,6 +1588,7 @@ main(void)
 #endif
 				OSA_TimeDelay(gWarpMenuPrintDelayMilliseconds);
 
+
 #ifdef WARP_BUILD_ENABLE_DEVAS7263
 				SEGGER_RTT_WriteString(0, "\r\t- 'k' AS7263			(0x00--0x2B): 2.7V -- 3.6V\n");
 				#else
@@ -1742,6 +1747,7 @@ main(void)
 						break;
 					}
 #endif
+
 					default:
 					{
 #ifdef WARP_BUILD_ENABLE_SEGGER_RTT_PRINTF
@@ -2601,6 +2607,7 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 					);
 	#endif
 
+	
 
 	if (printHeadersAndCalibration)
 	{
@@ -2651,6 +2658,7 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 		SEGGER_RTT_WriteString(0, " HDC1000 Temp, HDC1000 Hum,");
 		OSA_TimeDelay(gWarpMenuPrintDelayMilliseconds);
 		#endif
+		
 		SEGGER_RTT_WriteString(0, " RTC->TSR, RTC->TPR, # Config Errors");
 		OSA_TimeDelay(gWarpMenuPrintDelayMilliseconds);
 		SEGGER_RTT_WriteString(0, "\n\n");
@@ -2690,6 +2698,7 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 		#ifdef WARP_BUILD_ENABLE_DEVHDC1000
 		printSensorDataHDC1000(hexModeFlag);
 		#endif
+	
 
 
 		#ifdef WARP_BUILD_ENABLE_SEGGER_RTT_PRINTF
@@ -3350,6 +3359,8 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 #endif
 			break;
 		}
+
+		
 
 		default:
 		{

@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../../Qwiic_IR_Array_MLX90640/Firmware/Example1_BasicReadings"
+		}
+	],
+	"settings": {}
+}

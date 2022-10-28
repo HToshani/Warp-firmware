@@ -67,7 +67,6 @@
 #define							kWarpConstantStringErrorInvalidVoltage	"\rInvalid supply voltage [%d] mV!"
 #define							kWarpConstantStringErrorSanity		"\rSanity check failed!"
 
-
 #if (WARP_BUILD_ENABLE_DEVADXL362)
 	#include "devADXL362.h"
 	volatile WarpSPIDeviceState			deviceADXL362State;
@@ -175,6 +174,7 @@
 	#include "devBGX.h"
 	volatile WarpUARTDeviceState			deviceBGXState;
 #endif
+
 
 
 volatile i2c_master_state_t				i2cMasterState;
@@ -1651,7 +1651,7 @@ main(void)
 	#endif
 
 	#if (WARP_BUILD_ENABLE_DEVAMG8834)
-		initAMG8834(	0x68	/* i2cAddress */,	&deviceAMG8834State,		kWarpDefaultSupplyVoltageMillivoltsAMG8834	);
+		initAMG8834(	0x68	/* i2cAddress */,	/* &deviceAMG8834State, */		kWarpDefaultSupplyVoltageMillivoltsAMG8834	);
 	#endif
 
 	#if (WARP_BUILD_ENABLE_DEVAS7262)
@@ -2144,6 +2144,7 @@ main(void)
 					warpPrint("\r\t- 'k' AS7263			(0x00--0x2B): 2.7V -- 3.6V (compiled out) \n");
 				#endif
 
+
 				warpPrint("\r\tEnter selection> ");
 				key = warpWaitKey();
 
@@ -2293,6 +2294,7 @@ main(void)
 						break;
 					}
 #endif
+
 					default:
 					{
 						warpPrint("\r\tInvalid selection '%c' !\n", key);
@@ -3087,8 +3089,8 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 
 	#if (WARP_BUILD_ENABLE_DEVAMG8834)
 	numberOfConfigErrors += configureSensorAMG8834(	0x3F,/* Initial reset */
-					0x01,/* Frame rate 1 FPS */
-					);
+					0x01,/* Frame rate 1 FPS */	
+					0xFF);
 	#endif
 	#if (WARP_BUILD_ENABLE_DEVMMA8451Q)
 	numberOfConfigErrors += configureSensorMMA8451Q(0x00,/* Payload: Disable FIFO */
@@ -3156,6 +3158,8 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 					);
 	#endif
 
+	
+
 	if (printHeadersAndCalibration)
 	{
 		warpPrint("Measurement number, RTC->TSR, RTC->TPR,\t\t");
@@ -3202,6 +3206,8 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 			warpPrint(" HDC1000 Temp, HDC1000 Hum,");
 		#endif
 
+		
+
 		warpPrint(" RTC->TSR, RTC->TPR, # Config Errors");
 		warpPrint("\n\n");
 	}
@@ -3247,6 +3253,8 @@ printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag, int menuDelay
 		#if (WARP_BUILD_ENABLE_DEVHDC1000)
 			printSensorDataHDC1000(hexModeFlag);
 		#endif
+
+		
 
 		warpPrint(" %12d, %6d, %2u\n", RTC->TSR, RTC->TPR, numberOfConfigErrors);
 
@@ -3899,6 +3907,7 @@ repeatRegisterReadForDeviceAndAddress(WarpSensorDevice warpSensorDevice, uint8_t
 			break;
 		}
 
+		
 		default:
 		{
 			warpPrint("\r\tInvalid warpSensorDevice [%d] passed to repeatRegisterReadForDeviceAndAddress.\n", warpSensorDevice);

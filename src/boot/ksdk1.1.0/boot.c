@@ -1815,30 +1815,43 @@ int main(void) {
   warpPrint("Boot done.\n");
 
 #if (WARP_BUILD_BOOT_TO_CSVSTREAM)
-  printBootSplash(gWarpCurrentSupplyVoltage, menuRegisterAddress,
-                  &powerManagerCallbackStructure);
+  int timer = 0;
+  int rttKey = -1;
 
-  /*
-   *	Force to printAllSensors
-   */
-  gWarpI2cBaudRateKbps = 300;
-
-  if (!WARP_BUILD_BOOT_TO_VLPR) {
-    status = warpSetLowPowerMode(kWarpPowerModeRUN,
-                                 0 /* sleep seconds : irrelevant here */);
-    if (status != kWarpStatusOK) {
-      warpPrint("warpSetLowPowerMode(kWarpPowerModeRUN, 0 /* sleep seconds : "
-                "irrelevant here */)() failed...\n");
-    }
+  warpPrint("Press any key to show menu...\n");
+  while (rttKey < 0 && timer < 3000) {
+    rttKey = SEGGER_RTT_GetKey();
+    OSA_TimeDelay(1);
+    timer++;
   }
 
-  warpScaleSupplyVoltage(3300);
-  printAllSensors(true /* printHeadersAndCalibration */, true /* hexModeFlag */,
-                  0 /* menuDelayBetweenEachRun */, true /* loopForever */);
+  if (rttKey < 0) {
+    printBootSplash(gWarpCurrentSupplyVoltage, menuRegisterAddress,
+                  &powerManagerCallbackStructure);
 
-  /*
-   *	Notreached
-   */
+    /*
+    *	Force to printAllSensors
+    */
+    gWarpI2cBaudRateKbps = 300;
+
+    if (!WARP_BUILD_BOOT_TO_VLPR) {
+      status = warpSetLowPowerMode(kWarpPowerModeRUN,
+                                  0 /* sleep seconds : irrelevant here */);
+      if (status != kWarpStatusOK) {
+        warpPrint("warpSetLowPowerMode(kWarpPowerModeRUN, 0 /* sleep seconds : "
+                  "irrelevant here */)() failed...\n");
+      }
+    }
+
+    warpScaleSupplyVoltage(3300);
+    printAllSensors(true /* printHeadersAndCalibration */, true /* hexModeFlag */,
+                    0 /* menuDelayBetweenEachRun */, true /* loopForever */);
+
+    /*
+    *	Notreached
+    */
+  }
+
 #endif
 
 #if (WARP_BUILD_ENABLE_GLAUX_VARIANT && WARP_BUILD_BOOT_TO_CSVSTREAM)

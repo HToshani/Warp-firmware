@@ -195,7 +195,7 @@ volatile uint32_t gWarpMenuPrintDelayMilliseconds       = kWarpDefaultMenuPrintD
 volatile uint32_t gWarpSupplySettlingDelayMilliseconds  = kWarpDefaultSupplySettlingDelayMilliseconds;
 volatile uint16_t gWarpCurrentSupplyVoltage             = kWarpDefaultSupplyVoltageMillivolts;
 char              gWarpPrintBuffer[kWarpDefaultPrintBufferSizeBytes];
-volatile uint8_t  gWarpWriteToFlash = kWarpWriteToFlash;
+volatile uint8_t  gWarpWriteToFlash = 0;
 
 /*
  *	Since only one SPI transaction is ongoing at a time in our implementaion
@@ -1204,7 +1204,9 @@ void warpPrint(const char *fmt, ...) {
     /* Write to flash*/
     WarpStatus status = saveToIS25xPFromEnd(strlen(gWarpPrintBuffer), gWarpPrintBuffer);
     if (status != kWarpStatusOK) {
-        warpPrint("Error writing to flash: %d\n", status);
+      gWarpWriteToFlash = 0;
+      warpPrint("Error writing to flash: %d\n", status);
+      gWarpWriteToFlash = 1;
     }
   }
 #endif
@@ -1818,7 +1820,6 @@ int main(void) {
 #if (WARP_BUILD_DUMP_FLASH)
   #if (WARP_BUILD_ENABLE_DEVAT45DB)
       /* read from the page */
-      gWarpWriteToFlash = false;
       uint8_t dataBuffer[kWarpSizeAT45DBPageSizeBytes];
       // WarpStatus status;
 
@@ -1860,7 +1861,6 @@ int main(void) {
 #endif
 #if (WARP_BUILD_ENABLE_DEVIS25xP)
     /* read from the page */
-    gWarpWriteToFlash = false;
     status = readAllMemoryIS25xP();
     if (status != kWarpStatusOK) {
         warpPrint("\r\n\treadAllMemoryIS25xP failed: %d", status);
@@ -1869,7 +1869,7 @@ int main(void) {
 #endif
 
 
-#if (WARP_BUILD_ENABLE_GLAUX_VARIANT)
+#if (WARP_BUILD_ENABLE_GLAUX_VARIANT && WARP_BUILD_BOOT_TO_CSVSTREAM)
   printBootSplash(gWarpCurrentSupplyVoltage, menuRegisterAddress,
                   &powerManagerCallbackStructure);
 
@@ -2061,6 +2061,7 @@ int main(void) {
     warpPrint("\r- 'z': perpetually dump all sensor data.\n");
 
     warpPrint("\rEnter selection> ");
+
     key = warpWaitKey();
 
     switch (key) {
@@ -2683,9 +2684,11 @@ int main(void) {
       uint16_t menuDelayBetweenEachRun = read4digits();
       warpPrint("\r\n\tDelay between read batches set to %d milliseconds.",
                 menuDelayBetweenEachRun);
-      warpPrint("\r\n\tWrite sensor data to Flash? (1 or 0)>  ");
+      warpPrint("\r\n\tWrite sensor data to Flsh? (1 or 0)>  ");
+
       key = warpWaitKey();
-      gWarpWriteToFlash = (key == '1' ? 1 : 0);
+      warpPrint("key: %d \n", key);
+      gWarpWriteToFlash = (key == 49 ? 1 : 0);
 
       printAllSensors(true /* printHeadersAndCalibration */, hexModeFlag,
                       menuDelayBetweenEachRun, true /* loopForever */);
@@ -2704,7 +2707,6 @@ int main(void) {
     case 'R': {
 #if (WARP_BUILD_ENABLE_DEVAT45DB)
       /* read from the page */
-      gWarpWriteToFlash = false;
       uint8_t dataBuffer[kWarpSizeAT45DBPageSizeBytes];
       WarpStatus status;
 
@@ -2744,14 +2746,15 @@ int main(void) {
       }
 
 
+
 #endif
 #if (WARP_BUILD_ENABLE_DEVIS25xP)
     /* read from the page */
-    gWarpWriteToFlash = false;
     status = readAllMemoryIS25xP();
     if (status != kWarpStatusOK) {
         warpPrint("\r\n\treadAllMemoryIS25xP failed: %d", status);
     }
+
 #endif
 
       break;
@@ -2759,7 +2762,6 @@ int main(void) {
 
     case 'Z': {
 #if (WARP_BUILD_ENABLE_DEVAT45DB)
-      gWarpWriteToFlash = false;
       warpPrint("\r\n\tResetting Flash\n");
       setAT45DBStartOffset(1, 0);
       // if (status != kWarpStatusOK) {
@@ -2770,11 +2772,10 @@ int main(void) {
       warpPrint("\r\n\tFlash reset\n");
       break;
 #else
-      warpPrint("\r\n\tFlash not enabled\n");
-      break;
+      // warpPrint("\r\n\tAT45DB Flash not enabled\n");
+      // break;
 #endif
 #if (WARP_BUILD_ENABLE_DEVIS25xP)
-      gWarpWriteToFlash = false;
       warpPrint("\r\n\tResetting Flash\n");
       WarpStatus status;
       status = resetIS25xP();
@@ -2787,12 +2788,11 @@ int main(void) {
       if (status != kWarpStatusOK)
       {
         warpPrint("\r\n\treadMemoryIS25xP failed: %d", status);
-        return status;
+        break;
       }
+
       uint8_t pageOffset = pageOffsetBuf[2];
 	    uint16_t pageNumber = pageOffsetBuf[1] | pageOffsetBuf[0] << 8;
-      warpPrint("pageOffset, : %d, pageNumber, %d", pageOffset, pageNumber);
-
       warpPrint("\r\n\tFlash reset\n");
       break;
 #else
@@ -2800,6 +2800,34 @@ int main(void) {
       break;
 #endif
     }
+
+// #if (WARP_BUILD_ENABLE_DEVIS25xP)
+  case 'T': {
+    warpPrint("\nWriting test values\n");
+    WarpStatus status;
+      // printAllSensors(true, 0, 0, true);
+      uint8_t c = 0b1000011;
+
+      uint8_t cs[32];
+      for (int i = 0; i < 32; i++)
+      {
+        cs[i] = c;
+      }
+
+      for (int i = 0; i < 200; i++)
+      {
+        status = saveToIS25xPFromEnd(32, cs);
+        if (status != kWarpStatusOK)
+        {
+          warpPrint("\r\n\tsaveToIS25xPFromEnd failed: %d", status);
+          break;
+        }
+      }
+      // readAllMemoryIS25xP();
+      warpPrint("\nTest values written.\n");
+      break;
+  }
+// #endif
 
 /*
  *	Write raw bytes read from console to Flash
@@ -3052,9 +3080,9 @@ int main(void) {
             {
               buf[i] = i*j;
             }
-          status =ProgramIS25xP(32, buf);
+          status =saveToIS25xPFromEnd(32, buf);
           if (status != kWarpStatusOK) {
-            warpPrint("\r\n\tProgramIS25xP failed: %d", status);
+            warpPrint("\r\n\saveToIS25xPFromEnd failed: %d", status);
           } else {
             warpPrint("OK.\n");
         }
@@ -3285,8 +3313,10 @@ int main(void) {
   return 0;
 }
 
+
 void printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag,
                      int menuDelayBetweenEachRun, bool loopForever) {
+
   /*
    *	A 32-bit counter gives us > 2 years of before it wraps, even if sampling
    *at 60fps
@@ -3294,6 +3324,7 @@ void printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag,
   uint32_t readingCount = 0;
   uint32_t numberOfConfigErrors = 0;
 
+  int rttKey = -1;
 
 #if (WARP_BUILD_ENABLE_DEVAMG8834)
   numberOfConfigErrors += configureSensorAMG8834(0x3F, /* Initial reset */
@@ -3322,6 +3353,7 @@ void printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag,
   );
 #endif
 #if (WARP_BUILD_ENABLE_DEVBME680)
+  uint8_t tempWarpWriteToFlash = gWarpWriteToFlash;
   numberOfConfigErrors += configureSensorBME680(
       0b00000001, /*	payloadCtrl_Hum: Humidity oversampling (OSRS) to 1x
                    */
@@ -3330,6 +3362,9 @@ void printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag,
       0b00001000  /*	payloadGas_0: Turn off heater
                    */
   );
+
+  // somehow, configureSensorBME680() changes gWarpWriteToFlash to 0
+  gWarpWriteToFlash = tempWarpWriteToFlash;
 
   if (printHeadersAndCalibration) {
     warpPrint("\r\n\nBME680 Calibration Data: ");
@@ -3469,6 +3504,15 @@ void printAllSensors(bool printHeadersAndCalibration, bool hexModeFlag,
     }
 
     readingCount++;
+
+
+    rttKey = SEGGER_RTT_GetKey();
+
+    if (rttKey == 'q') {
+      gWarpWriteToFlash = 0;
+      break;
+    }
+
   }
 
   while (loopForever);

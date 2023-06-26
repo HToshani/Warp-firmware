@@ -367,6 +367,7 @@ WarpStatus readAllMemoryIS25xP()
 	uint8_t ops[kWarpMemoryCommonSpiBufferBytes] = {0};
 	ops[0] = 0x03; /* NORD */
 
+	warpPrint("Data start\n");
 	for (int i = 0; i < n_iterations; i++) {
 		ops[3] = (uint8_t)(startAddress);
 		ops[2] = (uint8_t)(startAddress >> 8);
@@ -394,7 +395,7 @@ WarpStatus readAllMemoryIS25xP()
 	for (size_t i = 0; i < excess; i++) {
 		warpPrint("%c", deviceIS25xPState.spiSinkBuffer[i + 4]);
 	}
-
+	warpPrint("Data end\n");
 	return kWarpStatusOK;
 }
 

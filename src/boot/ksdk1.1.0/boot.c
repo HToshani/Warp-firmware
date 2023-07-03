@@ -3038,7 +3038,9 @@ int main(void) {
                 "\r\n\t'2' - Dump JEDEC Table");
       warpPrint("\r\n\t'3' - Write Enable"
                 "\r\n\t'4' - Write to Flash"
-                "\r\n\t'5' - Chip Erase");
+                "\r\n\t'5' - Chip Erase"
+                "\r\n\t'6' - Write to Buffer"
+                "\r\n\t'7' - Read from Buffer");
       warpPrint("\r\n\tEnter selection> ");
       key = warpWaitKey();
       warpPrint("\n");
@@ -3192,6 +3194,45 @@ int main(void) {
           warpPrint("OK.\n");
         }
 
+        break;
+      }
+      case '6': {
+        /* write to page*/
+        WarpStatus status;       
+        uint8_t buf[32] = {0};        
+        for(size_t j=0;j<4;j++)
+        {
+          enableAT45DBWrite();
+          
+          for (size_t i = 0; i < 32; i++)
+          {
+            buf[i] = i+4;
+          }  
+          status = buffer1ProgramAT45DB(j * 32, 32, buf);
+          if (status != kWarpStatusOK) {
+            warpPrint("\r\n\tsaveToAT45DBFromEnd failed: %d", status);
+          } else {
+            // warpPrint("OK.\n");
+        }
+        }
+        break;
+      }
+      case '7': {
+        /* write to page*/
+        WarpStatus status;       
+        uint8_t buf_read[128] = {0}; 
+
+        status = readBuffer1AT45DB(0, 32, buf_read);     
+        for(size_t j=0;j<128;j++)
+        {
+          warpPrint("%d ", buf_read[j]);          
+          
+          if (status != kWarpStatusOK) {
+            warpPrint("\r\n\tsaveToAT45DBFromEnd failed: %d", status);
+          } else {
+            // warpPrint("OK.\n");
+        }
+        }
         break;
       }
       default: {

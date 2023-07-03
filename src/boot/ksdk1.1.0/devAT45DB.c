@@ -512,5 +512,177 @@ chipEraseAT45DB()
 	status =  spiTransactionAT45DB(&deviceAT45DBState, ops, 4);
 	
 	return status;
+}
+
+WarpStatus
+buffer1ProgramAT45DB(uint16_t pageNumber, size_t nbyte, uint8_t *  buf)
+{
+	WarpStatus	status;
+
+	if (nbyte > kWarpMemoryCommonSpiBufferBytes - 4)
+	{
+		return kWarpStatusBadDeviceCommand;
+	}
+
+	uint8_t	ops[kWarpMemoryCommonSpiBufferBytes] = {0};
+	ops[0] = 0x84;	/* PP */
+	ops[2] = (uint8_t)(pageNumber <<= 1);
+	ops[1] = (uint8_t)(pageNumber >>= 8);		
+	ops[3] = 0x00;
+
+	for (size_t i = 0; i < nbyte; i++)
+	{
+		ops[i+4] = buf[i];
+	}
+
+	status = spiTransactionAT45DB(&deviceAT45DBState, ops, nbyte + 4);
+	if (status != kWarpStatusOK)
+	{
+		warpPrint("Error: communication failed\n");
+		return status;
+	}
+}
+WarpStatus
+buffer2ProgramAT45DB(uint16_t pageNumber, size_t nbyte, uint8_t *  buf)
+{
+	WarpStatus	status;
+
+	if (nbyte > kWarpMemoryCommonSpiBufferBytes - 4)
+	{
+		return kWarpStatusBadDeviceCommand;
+	}
+
+	uint8_t	ops[kWarpMemoryCommonSpiBufferBytes] = {0};
+	ops[0] = 0x87;	/* PP */
+	ops[2] = (uint8_t)(pageNumber <<= 1);
+	ops[1] = (uint8_t)(pageNumber >>= 8);		
+	ops[3] = 0x00;
+
+	for (size_t i = 0; i < nbyte; i++)
+	{
+		ops[i+4] = buf[i];
+	}
+
+	status = spiTransactionAT45DB(&deviceAT45DBState, ops, nbyte + 4);
+	if (status != kWarpStatusOK)
+	{
+		warpPrint("Error: communication failed\n");
+		return status;
+	}
+}
+WarpStatus
+readBuffer1AT45DB(uint16_t pageNumber, size_t nbyte, void *  buf)
+{
+	WarpStatus	status;
+
+	if (nbyte > kWarpMemoryCommonSpiBufferBytes - 4)
+	{
+		return kWarpStatusBadDeviceCommand;
+	}
+
+	size_t nIterations = nbyte / (kWarpMemoryCommonSpiBufferBytes - 4);
+	size_t excessBytes = nbyte % (kWarpMemoryCommonSpiBufferBytes - 4);
+
+	for (size_t i = 0; i < nIterations; i++)
+	{
+		uint8_t	ops[kWarpMemoryCommonSpiBufferBytes] = {0};
+		ops[0] = 0xD4;	/* NORD */
+		ops[2] = (uint8_t)(pageNumber <<= 1);
+		ops[1] = (uint8_t)(pageNumber >>= 8);				
+		ops[3] = 0x00;
+
+		status = spiTransactionAT45DB(&deviceAT45DBState, ops, kWarpMemoryCommonSpiBufferBytes);
+
+		if (status != kWarpStatusOK)
+		{
+			warpPrint("Error: communication failed\n");
+			return status;
+		}
+
+		for (size_t j = 0; j < kWarpMemoryCommonSpiBufferBytes - 4; j++)
+		{
+			((uint8_t*)buf)[i*(kWarpMemoryCommonSpiBufferBytes - 4) + j] = deviceAT45DBState.spiSinkBuffer[i+4];
+		}
+
+	}
+
+	uint8_t	ops[kWarpMemoryCommonSpiBufferBytes] = {0};
+	ops[0] = 0xD4;	/* NORD */
+	ops[2] = (uint8_t)(pageNumber <<= 1);
+	ops[1] = (uint8_t)(pageNumber >>= 8);		
+	ops[3] = 0x00;
 	
+
+	status = spiTransactionAT45DB(&deviceAT45DBState, ops, excessBytes + 4);
+
+	if (status != kWarpStatusOK)
+	{
+		warpPrint("Error: communication failed\n");
+		return status;
+	}
+
+	for (size_t i = 0; i < excessBytes; i++)
+	{
+		((uint8_t*)buf)[nIterations*(kWarpMemoryCommonSpiBufferBytes - 4) + i] = deviceAT45DBState.spiSinkBuffer[i+4];
+	}
+
+	return kWarpStatusOK;
+}
+WarpStatus
+readBuffer2AT45DB(uint16_t pageNumber, size_t nbyte, void *  buf)
+{
+	WarpStatus	status;
+
+	if (nbyte > kWarpMemoryCommonSpiBufferBytes - 4)
+	{
+		return kWarpStatusBadDeviceCommand;
+	}
+
+	size_t nIterations = nbyte / (kWarpMemoryCommonSpiBufferBytes - 4);
+	size_t excessBytes = nbyte % (kWarpMemoryCommonSpiBufferBytes - 4);
+
+	for (size_t i = 0; i < nIterations; i++)
+	{
+		uint8_t	ops[kWarpMemoryCommonSpiBufferBytes] = {0};
+		ops[0] = 0xD6;	/* NORD */
+		ops[2] = (uint8_t)(pageNumber <<= 1);
+		ops[1] = (uint8_t)(pageNumber >>= 8);				
+		ops[3] = 0x00;
+
+		status = spiTransactionAT45DB(&deviceAT45DBState, ops, kWarpMemoryCommonSpiBufferBytes);
+
+		if (status != kWarpStatusOK)
+		{
+			warpPrint("Error: communication failed\n");
+			return status;
+		}
+
+		for (size_t j = 0; j < kWarpMemoryCommonSpiBufferBytes - 4; j++)
+		{
+			((uint8_t*)buf)[i*(kWarpMemoryCommonSpiBufferBytes - 4) + j] = deviceAT45DBState.spiSinkBuffer[i+4];
+		}
+
+	}
+
+	uint8_t	ops[kWarpMemoryCommonSpiBufferBytes] = {0};
+	ops[0] = 0xD6;	/* NORD */
+	ops[2] = (uint8_t)(pageNumber <<= 1);
+	ops[1] = (uint8_t)(pageNumber >>= 8);		
+	ops[3] = 0x00;
+	
+
+	status = spiTransactionAT45DB(&deviceAT45DBState, ops, excessBytes + 4);
+
+	if (status != kWarpStatusOK)
+	{
+		warpPrint("Error: communication failed\n");
+		return status;
+	}
+
+	for (size_t i = 0; i < excessBytes; i++)
+	{
+		((uint8_t*)buf)[nIterations*(kWarpMemoryCommonSpiBufferBytes - 4) + i] = deviceAT45DBState.spiSinkBuffer[i+4];
+	}
+
+	return kWarpStatusOK;
 }

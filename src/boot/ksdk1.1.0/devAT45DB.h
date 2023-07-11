@@ -45,8 +45,5 @@ WarpStatus 	pageProgramAT45DB(uint16_t startAddress, size_t nbyte, uint8_t *  bu
 WarpStatus 	eraseSectorAT45DB(uint32_t address);
 WarpStatus 	erase32kBlockAT45DB(uint32_t address);
 WarpStatus 	chipEraseAT45DB();
-WarpStatus buffer1ProgramAT45DB(uint16_t pageNumber, size_t nbyte, uint8_t *  buf);
-WarpStatus buffer2ProgramAT45DB(uint16_t pageNumber, size_t nbyte, uint8_t *  buf);
-WarpStatus readBuffer1AT45DB(uint16_t pageNumber, size_t nbyte, void *  buf);
-WarpStatus readBuffer2AT45DB(uint16_t pageNumber, size_t nbyte, void *  buf);
+
 

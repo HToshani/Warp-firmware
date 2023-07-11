@@ -58,16 +58,16 @@
 
 
 extern volatile WarpI2CDeviceState	deviceBME680State;
-extern volatile uint8_t				deviceBME680CalibrationValues[];
-extern volatile uint32_t			gWarpI2cBaudRateKbps;
-extern volatile uint32_t			gWarpI2cTimeoutMilliseconds;
-extern volatile uint32_t			gWarpSupplySettlingDelayMilliseconds;
+extern volatile uint8_t			deviceBME680CalibrationValues[];
+extern volatile uint32_t		gWarpI2cBaudRateKbps;
+extern volatile uint32_t		gWarpI2cTimeoutMilliseconds;
+extern volatile uint32_t		gWarpSupplySettlingDelayMilliseconds;
 
 
 void
 initBME680(const uint8_t i2cAddress, uint16_t operatingVoltageMillivolts)
 {
-	deviceBME680State.i2cAddress					= i2cAddress;
+	deviceBME680State.i2cAddress			= i2cAddress;
 	deviceBME680State.operatingVoltageMillivolts	= operatingVoltageMillivolts;
 
 	return;
@@ -76,7 +76,7 @@ initBME680(const uint8_t i2cAddress, uint16_t operatingVoltageMillivolts)
 WarpStatus
 writeSensorRegisterBME680(uint8_t deviceRegister, uint8_t payload)
 {
-	uint8_t			payloadByte[1], commandByte[1];
+	uint8_t		payloadByte[1], commandByte[1];
 	i2c_status_t	status;
 
 	if (deviceRegister > 0xFF)
@@ -85,7 +85,7 @@ writeSensorRegisterBME680(uint8_t deviceRegister, uint8_t payload)
 	}
 
 	i2c_device_t slave =
-	{
+		{
 		.address = deviceBME680State.i2cAddress,
 		.baudRate_kbps = gWarpI2cBaudRateKbps
 	};
@@ -93,17 +93,16 @@ writeSensorRegisterBME680(uint8_t deviceRegister, uint8_t payload)
 	commandByte[0] = deviceRegister;
 	payloadByte[0] = payload;
 
-
 	warpScaleSupplyVoltage(deviceBME680State.operatingVoltageMillivolts);
 	warpEnableI2Cpins();
 	status = I2C_DRV_MasterSendDataBlocking(
-							0 /* I2C instance */,
-							&slave,
-							commandByte,
-							1,
-							payloadByte,
-							1,
-							gWarpI2cTimeoutMilliseconds);
+		0 /* I2C instance */,
+		&slave,
+		commandByte,
+		1,
+		payloadByte,
+		1,
+		gWarpI2cTimeoutMilliseconds);
 	if (status != kStatus_I2C_Success)
 	{
 		return kWarpStatusDeviceCommunicationFailed;
@@ -115,7 +114,7 @@ writeSensorRegisterBME680(uint8_t deviceRegister, uint8_t payload)
 WarpStatus
 readSensorRegisterBME680(uint8_t deviceRegister, int numberOfBytes)
 {
-	uint8_t			cmdBuf[1] = {0xFF};
+	uint8_t		cmdBuf[1] = {0xFF};
 	i2c_status_t	status;
 
 
@@ -133,7 +132,7 @@ readSensorRegisterBME680(uint8_t deviceRegister, int numberOfBytes)
 	}
 
 	i2c_device_t slave =
-	{
+		{
 		.address = deviceBME680State.i2cAddress,
 		.baudRate_kbps = gWarpI2cBaudRateKbps
 	};
@@ -143,13 +142,13 @@ readSensorRegisterBME680(uint8_t deviceRegister, int numberOfBytes)
 	warpScaleSupplyVoltage(deviceBME680State.operatingVoltageMillivolts);
 	warpEnableI2Cpins();
 	status = I2C_DRV_MasterReceiveDataBlocking(
-							0 /* I2C peripheral instance */,
-							&slave,
-							cmdBuf,
-							1,
+		0 /* I2C peripheral instance */,
+		&slave,
+		cmdBuf,
+		1,
 							(uint8_t *)deviceBME680State.i2cBuffer,
-							1,
-							gWarpI2cTimeoutMilliseconds);
+		1,
+		gWarpI2cTimeoutMilliseconds);
 
 	if (status != kStatus_I2C_Success)
 	{
@@ -158,6 +157,7 @@ readSensorRegisterBME680(uint8_t deviceRegister, int numberOfBytes)
 
 	return kWarpStatusOK;
 }
+
 
 WarpStatus
 configureSensorBME680(uint8_t payloadCtrl_Hum, uint8_t payloadCtrl_Meas, uint8_t payloadGas_0)
@@ -168,28 +168,28 @@ configureSensorBME680(uint8_t payloadCtrl_Hum, uint8_t payloadCtrl_Meas, uint8_t
 
 	warpScaleSupplyVoltage(deviceBME680State.operatingVoltageMillivolts);
 	status1 = writeSensorRegisterBME680(kWarpSensorConfigurationRegisterBME680Ctrl_Hum,
-							payloadCtrl_Hum);
+										payloadCtrl_Hum);
 
 	status2 = writeSensorRegisterBME680(kWarpSensorConfigurationRegisterBME680Ctrl_Meas,
-							payloadCtrl_Meas);
+										payloadCtrl_Meas);
 
 	status3 = writeSensorRegisterBME680(kWarpSensorConfigurationRegisterBME680Ctrl_Gas_0,
-							payloadGas_0);
+										payloadGas_0);
 
 	/*
 	 *	Read the calibration registers
 	 */
 	for (	reg = kWarpSensorConfigurationRegisterBME680CalibrationRegion1Start;
-		reg < kWarpSensorConfigurationRegisterBME680CalibrationRegion1End;
-		reg++)
+		 reg < kWarpSensorConfigurationRegisterBME680CalibrationRegion1End;
+		 reg++)
 	{
 		status4 |= readSensorRegisterBME680(reg, 1 /* numberOfBytes */);
 		deviceBME680CalibrationValues[index++] = deviceBME680State.i2cBuffer[0];
 	}
 
 	for (	reg = kWarpSensorConfigurationRegisterBME680CalibrationRegion2Start;
-		reg < kWarpSensorConfigurationRegisterBME680CalibrationRegion2End;
-		reg++)
+		 reg < kWarpSensorConfigurationRegisterBME680CalibrationRegion2End;
+		 reg++)
 	{
 		status4 |= readSensorRegisterBME680(reg, 1 /* numberOfBytes */);
 		deviceBME680CalibrationValues[index++] = deviceBME680State.i2cBuffer[0];
@@ -215,7 +215,7 @@ printSensorDataBME680(bool hexModeFlag)
 	 *	First, trigger a measurement
 	 */
 	triggerStatus = writeSensorRegisterBME680(kWarpSensorConfigurationRegisterBME680Ctrl_Meas,
-							0b00100101);
+															0b00100101);
 
 	i2cReadStatusMSB = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680press_msb, 1);
 	readSensorRegisterValueMSB = deviceBME680State.i2cBuffer[0];
@@ -226,7 +226,7 @@ printSensorDataBME680(bool hexModeFlag)
 	unsignedRawAdcValue =
 			((readSensorRegisterValueMSB & 0xFF)  << 12) |
 			((readSensorRegisterValueLSB & 0xFF)  << 4)  |
-			((readSensorRegisterValueXLSB & 0xF0) >> 4);
+		((readSensorRegisterValueXLSB & 0xF0) >> 4);
 
 	if ((triggerStatus != kWarpStatusOK) || (i2cReadStatusMSB != kWarpStatusOK) || (i2cReadStatusLSB != kWarpStatusOK) || (i2cReadStatusXLSB != kWarpStatusOK))
 	{
@@ -253,7 +253,7 @@ printSensorDataBME680(bool hexModeFlag)
 	unsignedRawAdcValue =
 			((readSensorRegisterValueMSB & 0xFF)  << 12) |
 			((readSensorRegisterValueLSB & 0xFF)  << 4)  |
-			((readSensorRegisterValueXLSB & 0xF0) >> 4);
+		((readSensorRegisterValueXLSB & 0xF0) >> 4);
 	if ((triggerStatus != kWarpStatusOK) || (i2cReadStatusMSB != kWarpStatusOK) || (i2cReadStatusLSB != kWarpStatusOK) || (i2cReadStatusXLSB != kWarpStatusOK))
 	{
 		warpPrint(" ----,");
@@ -290,4 +290,151 @@ printSensorDataBME680(bool hexModeFlag)
 			warpPrint(" %u,", unsignedRawAdcValue);
 		}
 	}
+}
+
+uint8_t
+appendSensorDataBME680(uint8_t* buf)
+{
+	uint8_t index = 0;
+
+	uint16_t readSensorRegisterValueLSB;
+	uint16_t readSensorRegisterValueMSB;
+	uint16_t readSensorRegisterValueXLSB;
+	uint32_t unsignedRawAdcValue;
+	WarpStatus triggerStatus, i2cReadStatusMSB, i2cReadStatusLSB, i2cReadStatusXLSB;
+
+	warpScaleSupplyVoltage(deviceBME680State.operatingVoltageMillivolts);
+
+	/*
+	 *	First, trigger a measurement
+	 */
+	triggerStatus               = writeSensorRegisterBME680(kWarpSensorConfigurationRegisterBME680Ctrl_Meas,
+															0b00100101);
+
+	i2cReadStatusMSB            = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680press_msb, 1);
+	readSensorRegisterValueMSB  = deviceBME680State.i2cBuffer[0];
+	i2cReadStatusLSB            = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680press_lsb, 1);
+	readSensorRegisterValueLSB  = deviceBME680State.i2cBuffer[0];
+	i2cReadStatusXLSB           = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680press_xlsb, 1);
+	readSensorRegisterValueXLSB = deviceBME680State.i2cBuffer[0];
+	unsignedRawAdcValue =
+		((readSensorRegisterValueMSB & 0xFF) << 12) |
+		((readSensorRegisterValueLSB & 0xFF) << 4) |
+		((readSensorRegisterValueXLSB & 0xF0) >> 4);
+
+	if ((triggerStatus != kWarpStatusOK) || (i2cReadStatusMSB != kWarpStatusOK) || (i2cReadStatusLSB != kWarpStatusOK) || (i2cReadStatusXLSB != kWarpStatusOK))
+	{
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+	}
+	else
+	{
+		/*
+		 * MSB first
+		 */
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 24);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 16);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 8);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue);
+		index += 1;
+	}
+
+	i2cReadStatusMSB            = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680temp_msb, 1);
+	readSensorRegisterValueMSB  = deviceBME680State.i2cBuffer[0];
+	i2cReadStatusLSB            = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680temp_lsb, 1);
+	readSensorRegisterValueLSB  = deviceBME680State.i2cBuffer[0];
+	i2cReadStatusXLSB           = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680temp_xlsb, 1);
+	readSensorRegisterValueXLSB = deviceBME680State.i2cBuffer[0];
+	unsignedRawAdcValue =
+		((readSensorRegisterValueMSB & 0xFF) << 12) |
+		((readSensorRegisterValueLSB & 0xFF) << 4) |
+		((readSensorRegisterValueXLSB & 0xF0) >> 4);
+	if ((triggerStatus != kWarpStatusOK) || (i2cReadStatusMSB != kWarpStatusOK) || (i2cReadStatusLSB != kWarpStatusOK) || (i2cReadStatusXLSB != kWarpStatusOK))
+	{
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+	}
+	else
+	{
+		/*
+		 * MSB first
+		 */
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 24);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 16);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 8);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue);
+		index += 1;
+	}
+
+	i2cReadStatusMSB           = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680hum_msb, 1);
+	readSensorRegisterValueMSB = deviceBME680State.i2cBuffer[0];
+	i2cReadStatusLSB           = readSensorRegisterBME680(kWarpSensorOutputRegisterBME680hum_lsb, 1);
+	readSensorRegisterValueLSB = deviceBME680State.i2cBuffer[0];
+	unsignedRawAdcValue        = ((readSensorRegisterValueMSB & 0xFF) << 8) | (readSensorRegisterValueLSB & 0xFF);
+	if ((triggerStatus != kWarpStatusOK) || (i2cReadStatusMSB != kWarpStatusOK) || (i2cReadStatusLSB != kWarpStatusOK))
+	{
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+
+		buf[index] = 0;
+		index += 1;
+	}
+	else
+	{
+		/*
+		 * MSB first
+		 */
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 24);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 16);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue >> 8);
+		index += 1;
+
+		buf[index] = (uint8_t)(unsignedRawAdcValue);
+		index += 1;
+	}
+
+	/*
+	 * total number of bytes written
+	 */
+	return index;
 }
